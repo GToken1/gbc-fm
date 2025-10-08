@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Велошеринг — Master модель (RU, v2)</title>
+<style>
+  :root{--bg:#0b1220;--card:#121a2b;--text:#e5ecf8;--muted:#8aa0bd;--line:#243047;--acc:#60a5fa}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .container{max-width:1200px;margin:0 auto;padding:18px}
+  .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+  h1{font-size:22px;margin:0 0 6px}.lead{color:var(--muted);font-size:13px}
+  h2{font-size:17px;margin:0 0 8px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  label{display:block;margin-bottom:4px;color:#c7d7ee;font-size:12px}
+  input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#0f172a;color:var(--text)}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}button.btn{background:var(--acc);color:#0b1220;border:none;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+  .btn.secondary{background:#1f2a44;color:#cfe3ff;border:1px solid #35507a}
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.kpi{border:1px solid var(--line);border-radius:10px;padding:12px;background:#0e1729}
+  .kpi .t{font-size:12px;color:var(--muted)}.kpi .v{font-size:20px;font-weight:800}
+  table{width:100%;border-collapse:collapse}th,td{border-bottom:1px dashed var(--line);padding:8px 10px;text-align:left;font-size:13px}
+  th{color:#cbdaf1;background:#0f1a2d}.mini{font-size:12px;color:var(--muted)}
+  .toggle{margin-left:auto;display:flex;gap:6px;align-items:center}.switch{display:flex;gap:4px}
+  .switch input{display:none}
+  .switch label{padding:6px 10px;border:1px solid var(--line);border-radius:999px;cursor:pointer;font-size:12px;white-space:nowrap}
+  .switch input:checked + label{background:var(--acc);color:#0b1220;border-color:var(--acc)}
+  .header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .header-row h2{margin:0}
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="card">
+    <h1>Велошеринг — Master модель (RU, v2)</h1>
+    <div class="lead">Собрано 07.10.2025. Дефолты: 600 вел., 40 000 ₽/велик, релокация 50 ₽, эквайринг 3%, фикс 150k/50k, аморт 4 года, ПСН 1 000 ₽/мес, CAPEX/хаб 5 000 ₽, долг по умолчанию 0 ₽ (ввод суммой). </div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>1) Парк и спрос</h2>
+        <div class="mini">Сезон — активные месяцы. RPD — поездок на велосипед в день в сезон. Минуты — средняя длительность.</div>
+        <div class="grid2">
+          <div><label>Парк (шт.)</label><input id="bikes" type="number" value="600" oninput="calc()"></div>
+          <div><label>Цена велосипеда, ₽</label><input id="bike_capex" type="number" value="40000" oninput="calc()"></div>
+          <div><label>Сезон, мес</label><input id="season_m" type="number" value="6" step="0.5" oninput="calc()"></div>
+          <div><label>RPD: поездок/велик/день (в сезон)</label><input id="rpd" type="number" value="1.1" step="0.1" oninput="calc()"></div>
+          <div><label>Минут в поездке (сред.)</label><input id="mpt" type="number" value="21" oninput="calc()"></div>
+          <div><label>Unlock fee, ₽ (PAYG)</label><input id="unlock" type="number" value="0" oninput="calc()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2) Продукты и тарифы</h2>
+        <div class="mini">PAYG — поминутно; Pass — фикс + включённые минуты; Membership — абонемент/мес + минуты/день. Перерасход оплачивается по «сверхлимит».</div>
+        <h3>PAYG</h3>
+        <div class="grid2">
+          <div><label>Ставка, ₽/мин</label><input id="payg_ppm" type="number" value="5" oninput="calc()"></div>
+          <div><label>Доля поездок, %</label><input id="payg_share" type="number" value="50" oninput="calc()"></div>
+        </div>
+        <h3>Day Pass</h3>
+        <div class="grid2">
+          <div><label>Цена, ₽</label><input id="pass_price" type="number" value="299" oninput="calc()"></div>
+          <div><label>Включено минут</label><input id="pass_inc" type="number" value="120" oninput="calc()"></div>
+          <div><label>Сверхлимит, ₽/мин</label><input id="pass_over" type="number" value="3" oninput="calc()"></div>
+          <div><label>Доля поездок, %</label><input id="pass_share" type="number" value="25" oninput="calc()"></div>
+          <div><label>Перерасход/пасс, мин</label><input id="pass_over_min" type="number" value="20" oninput="calc()"></div>
+        </div>
+        <h3>Membership</h3>
+        <div class="grid2">
+          <div><label>Цена/мес, ₽</label><input id="m_price" type="number" value="499" oninput="calc()"></div>
+          <div><label>Минут/день включено</label><input id="m_inc_day" type="number" value="60" oninput="calc()"></div>
+          <div><label>Сверхлимит, ₽/мин</label><input id="m_over" type="number" value="3" oninput="calc()"></div>
+          <div><label>Доля поездок, %</label><input id="m_share" type="number" value="25" oninput="calc()"></div>
+          <div><label>Перерасход, мин/день</label><input id="m_over_min_day" type="number" value="10" oninput="calc()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>3) Хабы, дисциплина</h2>
+        <div class="mini"><b>Комплаенс</b> — % финишей в хабах; <b>Off‑hub</b> — сбор с клиента за финиш вне хаба; <b>Релокация</b> — ваша себестоимость вернуть велик. <b>Цель: комплаенс ≥95% (меньше релокаций = выше прибыль)</b></div>
+        <div class="grid2">
+          <div><label>Комплаенс парковок, %</label><input id="hub_ok" type="number" value="92" oninput="calc()"></div>
+          <div><label>Off‑hub сбор, ₽</label><input id="offhub_fee" type="number" value="200" oninput="calc()"></div>
+          <div><label>Стоимость релокации, ₽</label><input id="reloc_cost" type="number" value="50" oninput="calc()"></div>
+          <div>
+            <label>Хабы: авто/вручную</label>
+            <select id="hubs_auto" onchange="calc()"><option value="auto" selected>Авто</option><option value="manual">Вручную</option></select>
+          </div>
+          <div><label>Великов на 1 хаб (если авто)</label><input id="bikes_per_hub" type="number" value="5" oninput="calc()"></div>
+          <div><label>Кол-во хабов (если вручную)</label><input id="hubs_manual" type="number" value="120" oninput="calc()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>4) B2G/спонсорство и город</h2>
+        <div class="mini">По умолчанию 0. Ориентиры: спонсорство 100–300 ₽/велик/мес, компенсация города 0–250 ₽/велик/мес, городская плата 0–2 000 ₽/велик/год (зависит от города/тендера).</div>
+        <div class="grid2">
+          <div><label>Спонсорство брендов, ₽/велик/мес</label><input id="sponsor_m" type="number" value="0" oninput="calc()"></div>
+          <div><label>Компенсация города, ₽/велик/мес</label><input id="city_subsidy_m" type="number" value="0" oninput="calc()"></div>
+          <div><label>Платёж городу (лицензии), ₽/велик/год</label><input id="city_fee_y" type="number" value="0" oninput="calc()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>5) OPEX, налоги, аморт.</h2>
+        <div class="mini">Налоги: ПСН (фикс/мес), УСН 6% (доходы) или УСН 10% (доходы‑расходы). НДС — опционально (цены считаем брутто; при НДС налог вычитается из B2C).</div>
+        <div class="grid2">
+          <div><label>Эквайринг, % от B2C</label><input id="acq_pct" type="number" value="3" oninput="calc()"></div>
+          <div><label>Переменные (сервис/связь), % от B2C</label><input id="var_pct" type="number" value="5" oninput="calc()"></div>
+          <div><label>Фикс. расходы в сезон, ₽/мес</label><input id="fixed_season_m" type="number" value="150000" oninput="calc()"></div>
+          <div><label>Расходы межсезонья, ₽/мес</label><input id="off_m" type="number" value="50000" oninput="calc()"></div>
+          <div><label>Срок амортизации, лет</label><input id="dep_years" type="number" value="4" oninput="calc()"></div>
+          <div>
+            <label>Налоговый режим</label>
+            <select id="tax_mode" onchange="calc()">
+              <option value="patent" selected>Патент (ПСН)</option>
+              <option value="usn6">УСН 6% (доходы)</option>
+              <option value="usn10dr">УСН 10% (доходы‑расходы)</option>
+            </select>
+          </div>
+          <div><label>Патент, ₽/мес</label><input id="patent_pm" type="number" value="1000" oninput="calc()"></div>
+          <div><label>Месяцев патента/год</label><input id="patent_months" type="number" value="12" oninput="calc()"></div>
+          <div>
+            <label>Налоговая база</label>
+            <select id="tax_base" onchange="calc()">
+              <option value="b2c" selected>Только B2C</option>
+              <option value="all">B2C + Off‑hub + B2G</option>
+            </select>
+          </div>
+          <div>
+            <label>НДС плательщик?</label>
+            <select id="vat_mode" onchange="calc()">
+              <option value="no" selected>Нет</option>
+              <option value="yes">Да</option>
+            </select>
+          </div>
+          <div><label>Ставка НДС, % (если да)</label><input id="vat_pct" type="number" value="20" oninput="calc()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>6) CAPEX и финансы</h2>
+        <div class="mini"><b>CAPEX/хаб</b> — стойки/знаки/разметка. <b>IT</b> — разовые внедрения. <b>Непредвиденные</b> — резерв к CAPEX. <b>Долг (₽)</b> — ввод суммой; <b>ставка</b> — % годовых.</div>
+        <div class="grid2">
+          <div><label>CAPEX на хаб, ₽</label><input id="hub_capex" type="number" value="5000" oninput="calc()"></div>
+          <div><label>IT/интеграции, ₽</label><input id="it_capex" type="number" value="500000" oninput="calc()"></div>
+          <div><label>Непредвиденные, % от CAPEX</label><input id="cont_pct" type="number" value="5" oninput="calc()"></div>
+          <div><label>Долг (сумма), ₽</label><input id="debt_amount" type="number" value="0" oninput="calc()"></div>
+          <div><label>Ставка по долгу, % годовых</label><input id="interest_rate" type="number" value="14" oninput="calc()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>7) Пресеты</h2>
+        <div class="btns">
+          <button class="btn secondary" onclick="applyPreset('donkey')">Donkey‑style 2024</button>
+          <button class="btn secondary" onclick="applyPreset('normal')">Нормальный</button>
+          <button class="btn secondary" onclick="applyPreset('conservative')">Скромный</button>
+          <button class="btn" onclick="calc()">Пересчитать</button>
+        </div>
+        <div class="mini" style="margin-top:6px">Donkey‑style: сезон 8 мес, rpd ≈1.5, 20 мин, доли 40/20/40, комплаенс 97–98.</div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <div class="header-row">
+          <h2>Итоги сезона / года</h2>
+          <span class="toggle">
+            <span class="mini">Окупаемость:</span>
+            <span class="switch">
+              <input type="radio" id="pb_ebitda" name="pb" checked onclick="setPaybackMode('ebitda')"><label for="pb_ebitda">EBITDA</label>
+              <input type="radio" id="pb_cash" name="pb" onclick="setPaybackMode('cash')"><label for="pb_cash">Cash</label>
+            </span>
+          </span>
+        </div>
+        <div class="mini">Payback (EBITDA) = CAPEX / EBITDA; Payback (Cash) = CAPEX / Чистая прибыль</div>
+        <div class="kpis">
+          <div class="kpi"><div class="t">CAPEX всего</div><div class="v" id="capex_v">0 ₽</div></div>
+          <div class="kpi"><div class="t">Выручка сезона (B2C)</div><div class="v" id="rev_season_v">0 ₽</div></div>
+          <div class="kpi"><div class="t">EBITDA за год</div><div class="v" id="ebitda_v">0 ₽</div></div>
+          <div class="kpi"><div class="t">Чистая прибыль (Год 1)</div><div class="v" id="net_v">0 ₽</div></div>
+          <div class="kpi"><div class="t">RPM (₽/велик/мес.)</div><div class="v" id="rpm_v">0 ₽</div></div>
+          <div class="kpi"><div class="t">Вклад/велик/мес. (≈)</div><div class="v" id="contr_v">0 ₽</div></div>
+          <div class="kpi"><div class="t">Окупаемость, лет</div><div class="v" id="payback_v">0</div></div>
+          <div class="kpi"><div class="t">Off‑hub: доход / затраты</div><div class="v" id="offhub_v">0 / 0</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Разбивка выручки (базовый сезон)</h2>
+        <table>
+          <thead><tr><th>Поток</th><th>Выручка, ₽</th><th>Доля</th></tr></thead>
+          <tbody id="rev_rows">
+            <tr><td>PAYG</td><td>0 ₽</td><td>0%</td></tr>
+            <tr><td>Day Pass</td><td>0 ₽</td><td>0%</td></tr>
+            <tr><td>Membership</td><td>0 ₽</td><td>0%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Разбивка расходов (базовый год)</h2>
+        <table>
+          <thead><tr><th>Статья</th><th>Сумма, ₽</th></tr></thead>
+          <tbody id="cost_rows">
+            <tr><td>Эквайринг</td><td>0 ₽</td></tr>
+            <tr><td>Переменные</td><td>0 ₽</td></tr>
+            <tr><td>Фикс. сезон</td><td>0 ₽</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>P&L по месяцам (Год 1)</h2>
+        <table id="pl_month">
+          <thead><tr><th>Месяц</th><th>B2C, ₽</th><th>B2G, ₽</th><th>Off‑hub, ₽</th><th>OPEX, ₽</th><th>EBITDA, ₽</th><th>%/долг, ₽</th><th>Налог, ₽</th><th>Чистая прибыль, ₽</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>0 ₽</td><td>0 ₽</td><td>0 ₽</td><td>0 ₽</td><td>0 ₽</td><td>0 ₽</td><td>0 ₽</td><td>0 ₽</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>DCF 5 лет</h2>
+        <div class="mini">FCF = EBITDA − % − налог − CAPEX роста. t0 — стартовый CAPEX (&minus;). Итог: NPV (млн ₽) и IRR.</div>
+        <div class="grid3">
+          <div><label>Рост парка, %/год</label><input id="fleet_cagr" type="number" value="20" oninput="calc()"></div>
+          <div><label>Рост rpd, %/год</label><input id="rpd_cagr" type="number" value="5" oninput="calc()"></div>
+          <div><label>Индексация цен, %/год</label><input id="price_cagr" type="number" value="6" oninput="calc()"></div>
+          <div><label>Ставка дисконтирования, %</label><input id="disc_rate" type="number" value="18" oninput="calc()"></div>
+          <div><label>Срок прогноза, лет</label><input id="horizon" type="number" value="5" oninput="calc()"></div>
+          <div><label>Целевой комплаенс к концу, %</label><input id="hub_ok_target" type="number" value="97" oninput="calc()"></div>
+        </div>
+        <table id="dcf_tbl">
+          <thead><tr><th>Год</th><th>Парк</th><th>Trips, млн</th><th>EBITDA, млн ₽</th><th>%+Налог, млн ₽</th><th>CAPEX роста, млн ₽</th><th>FCF, млн ₽</th><th>PV, млн ₽</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>600</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+          </tbody>
+          <tfoot><tr><th colspan="6" style="text-align:right">NPV (млн ₽)</th><th id="npv_v">0.00</th><th>IRR</th><th id="irr_v">0.0%</th></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let paybackMode='ebitda';
+function setPaybackMode(m){paybackMode=m;calc()}
+function n(v){return parseFloat(v)||0}
+function mln(x){return (x/1e6).toFixed(2)}
+function fmt(x){
+  if (isNaN(x) || !isFinite(x)) return '0 ₽';
+  return Math.round(x).toLocaleString('ru-RU')+' ₽';
+}
+
+function applyPreset(name){
+  if(name==='donkey'){ 
+    document.getElementById('season_m').value=8; 
+    document.getElementById('rpd').value=1.5; 
+    document.getElementById('mpt').value=20;
+    document.getElementById('payg_share').value=40; 
+    document.getElementById('pass_share').value=20; 
+    document.getElementById('m_share').value=40;
+    document.getElementById('hub_ok').value=97; 
+    document.getElementById('offhub_fee').value=200; 
+    document.getElementById('reloc_cost').value=80;
+    document.getElementById('fleet_cagr').value=22; 
+    document.getElementById('rpd_cagr').value=6; 
+    document.getElementById('price_cagr').value=6; 
+    document.getElementById('hub_ok_target').value=98; 
+  }
+  if(name==='normal'){ 
+    document.getElementById('season_m').value=7; 
+    document.getElementById('rpd').value=1.3; 
+    document.getElementById('mpt').value=20; 
+    document.getElementById('payg_share').value=45; 
+    document.getElementById('pass_share').value=15; 
+    document.getElementById('m_share').value=40; 
+    document.getElementById('hub_ok').value=96; 
+    document.getElementById('reloc_cost').value=70; 
+  }
+  if(name==='conservative'){ 
+    document.getElementById('season_m').value=6; 
+    document.getElementById('rpd').value=1.0; 
+    document.getElementById('payg_share').value=55; 
+    document.getElementById('pass_share').value=20; 
+    document.getElementById('m_share').value=25; 
+    document.getElementById('hub_ok').value=94; 
+    document.getElementById('reloc_cost').value=60; 
+  }
+  calc();
+}
+
+function baseCalc(P){
+  // hubs: dynamic or manual
+  const hubs = (P.hubs_auto==='auto') ? Math.ceil(P.bikes / Math.max(1,P.bikes_per_hub)) : Math.max(0, P.hubs_manual);
+
+  const season_days = P.season_m*30;
+  const trips_day = P.bikes*P.rpd;
+  const mins_day_total = trips_day*P.mpt;
+
+  const mins_payg = mins_day_total * P.payg_share;
+  const mins_pass = mins_day_total * P.pass_share;
+  const mins_m    = mins_day_total * P.m_share;
+
+  // PAYG revenue
+  const payg_rev_day = mins_payg*P.payg_ppm + (trips_day*P.payg_share)*P.unlock;
+  
+  // Day Pass revenue
+  const passes_per_day = P.pass_inc>0 ? mins_pass/P.pass_inc : 0;
+  const pass_over_mins_total = Math.max(0,passes_per_day*P.pass_over_min);
+  const pass_rev_day = passes_per_day*P.pass_price + pass_over_mins_total*P.pass_over;
+  
+  // Membership revenue
+  const m_minutes_per_member_day = P.m_inc_day + P.m_over_min_day;
+  const members = m_minutes_per_member_day>0 ? (mins_m / m_minutes_per_member_day) : 0;
+  const m_over_mins_total = members*P.m_over_min_day;
+  const m_rev_day = members*(P.m_price/30) + m_over_mins_total*P.m_over;
+
+  const offhub_events_day = trips_day*(1-P.hub_ok);
+  const offhub_fee_rev_day = offhub_events_day * P.offhub_fee;
+  const reloc_cost_day = offhub_events_day * P.reloc_cost;
+
+  // B2C season
+  let b2c_rev_season_gross = (payg_rev_day + pass_rev_day + m_rev_day) * season_days;
+  
+  // VAT handling
+  let vat_year = 0;
+  if (P.vat_mode==='yes') {
+    const vat_part = P.vat_pct/ (100 + P.vat_pct);
+    vat_year = b2c_rev_season_gross * vat_part;
+  }
+  const b2c_rev_season = b2c_rev_season_gross - vat_year;
+
+  const sponsor_rev_year = P.bikes * P.sponsor_m * 12;
+  const city_subsidy_year = P.bikes * P.city_subsidy_m * 12;
+  const b2g_rev_year = sponsor_rev_year + city_subsidy_year;
+
+  const offhub_rev_year = offhub_fee_rev_day * season_days;
+  const total_rev_year = b2c_rev_season + b2g_rev_year + offhub_rev_year;
+
+  const acq = b2c_rev_season * P.acq_pct/100;
+  const varcost = b2c_rev_season * P.var_pct/100;
+  const fixed = P.fixed_season_m * P.season_m;
+  const off_season_costs = P.off_m * (12 - P.season_m);
+  const reloc_costs = reloc_cost_day * season_days;
+  const city_fees = P.bikes * P.city_fee_y;
+
+  // Амортизация
+  const dep_bikes_year = (P.bikes*P.bike_capex)/P.dep_years;
+  const dep_it_year = P.it_capex/3;
+  const dep_year = dep_bikes_year + dep_it_year;
+
+  // CAPEX & interest
+  const capex_bikes = P.bikes*P.bike_capex;
+  const capex_hubs = hubs*P.hub_capex;
+  const capex_total = capex_bikes + capex_hubs + P.it_capex;
+  const capex_total_all = capex_total * (1 + P.cont_pct/100);
+  const debt = Math.min(P.debt_amount, capex_total_all);
+  const interest = debt * (P.interest_rate/100);
+
+  // Taxes
+  const base_choice = P.tax_base;
+  const tax_base_all = b2c_rev_season + b2g_rev_year + offhub_rev_year;
+  const base_b2c = b2c_rev_season;
+  let tax_year = 0;
+  if (P.tax_mode==='patent') { tax_year = P.patent_pm * P.patent_months; }
+  if (P.tax_mode==='usn6')  { tax_year = (base_choice==='all'?tax_base_all:base_b2c) * 0.06; }
+  if (P.tax_mode==='usn10dr') {
+     const cash_opex = acq + varcost + fixed + off_season_costs + reloc_costs + city_fees;
+     const base = (base_choice==='all'?tax_base_all:base_b2c) - cash_opex;
+     tax_year = Math.max(0, base) * 0.10;
+  }
+
+  const opex_year = acq + varcost + fixed + off_season_costs + reloc_costs + city_fees;
+  const ebitda_year = total_rev_year - opex_year;
+  const net_year = ebitda_year - dep_year - interest - tax_year;
+  const rpm = b2c_rev_season / (P.bikes * P.season_m);
+  const contr = (b2c_rev_season - (acq+varcost+fixed)) / (P.bikes * P.season_m);
+
+  return {
+    hubs, season_days, trips_day, 
+    b2c_rev_season, b2g_rev_year, offhub_rev_year, total_rev_year,
+    sponsor_rev_year, city_subsidy_year, vat_year,
+    acq, varcost, fixed, off_season_costs, reloc_costs, city_fees, 
+    opex_year, ebitda_year, dep_year, interest, tax_year, net_year,
+    capex_total_all, rpm, contr, offhub_fee_rev_day, reloc_cost_day,
+    hub_ok:P.hub_ok, bikes:P.bikes, rpd:P.rpd, season_m:P.season_m,
+    payg_rev_day, pass_rev_day, m_rev_day, members
+  };
+}
+
+function IRR(cashflows){
+  let r_low=-0.9, r_high=1.0;
+  function npv(r){return cashflows.reduce((a,cf,t)=>a+cf/Math.pow(1+r,t),0)}
+  for(let i=0;i<60;i++){
+    let mid=(r_low+r_high)/2; 
+    let v=npv(mid); 
+    if(v>0) r_low=mid; 
+    else r_high=mid;
+  } 
+  return (r_low+r_high)/2;
+}
+
+function calc(){
+  const P = {
+    bikes:n(document.getElementById('bikes').value), 
+    bike_capex:n(document.getElementById('bike_capex').value),
+    season_m:n(document.getElementById('season_m').value), 
+    rpd:n(document.getElementById('rpd').value), 
+    mpt:n(document.getElementById('mpt').value), 
+    unlock:n(document.getElementById('unlock').value),
+    payg_ppm:n(document.getElementById('payg_ppm').value), 
+    payg_share:n(document.getElementById('payg_share').value)/100, 
+    pass_price:n(document.getElementById('pass_price').value), 
+    pass_inc:n(document.getElementById('pass_inc').value), 
+    pass_over:n(document.getElementById('pass_over').value),
+    pass_share:n(document.getElementById('pass_share').value)/100, 
+    pass_over_min:n(document.getElementById('pass_over_min').value),
+    m_price:n(document.getElementById('m_price').value), 
+    m_inc_day:n(document.getElementById('m_inc_day').value), 
+    m_over:n(document.getElementById('m_over').value), 
+    m_share:n(document.getElementById('m_share').value)/100, 
+    m_over_min_day:n(document.getElementById('m_over_min_day').value),
+    hub_ok:n(document.getElementById('hub_ok').value)/100, 
+    offhub_fee:n(document.getElementById('offhub_fee').value), 
+    reloc_cost:n(document.getElementById('reloc_cost').value),
+    hubs_auto:document.getElementById('hubs_auto').value, 
+    bikes_per_hub:n(document.getElementById('bikes_per_hub').value), 
+    hubs_manual:n(document.getElementById('hubs_manual').value),
+    sponsor_m:n(document.getElementById('sponsor_m').value), 
+    city_subsidy_m:n(document.getElementById('city_subsidy_m').value), 
+    city_fee_y:n(document.getElementById('city_fee_y').value),
+    acq_pct:n(document.getElementById('acq_pct').value), 
+    var_pct:n(document.getElementById('var_pct').value), 
+    fixed_season_m:n(document.getElementById('fixed_season_m').value), 
+    off_m:n(document.getElementById('off_m').value), 
+    dep_years:Math.max(1,n(document.getElementById('dep_years').value)),
+    tax_mode:document.getElementById('tax_mode').value, 
+    patent_pm:n(document.getElementById('patent_pm').value), 
+    patent_months:n(document.getElementById('patent_months').value), 
+    tax_base:document.getElementById('tax_base').value,
+    vat_mode:document.getElementById('vat_mode').value, 
+    vat_pct:n(document.getElementById('vat_pct').value),
+    hub_capex:n(document.getElementById('hub_capex').value), 
+    it_capex:n(document.getElementById('it_capex').value), 
+    cont_pct:n(document.getElementById('cont_pct').value), 
+    debt_amount:n(document.getElementById('debt_amount').value), 
+    interest_rate:n(document.getElementById('interest_rate').value),
+  };
+
+  const R = baseCalc(P);
+
+  // Update KPI displays
+  document.getElementById('capex_v').innerText = fmt(R.capex_total_all);
+  document.getElementById('rev_season_v').innerText = fmt(R.b2c_rev_season);
+  document.getElementById('ebitda_v').innerText = fmt(R.ebitda_year);
+  document.getElementById('net_v').innerText = fmt(R.net_year);
+  document.getElementById('rpm_v').innerText = Math.round(R.rpm).toLocaleString('ru-RU')+' ₽';
+  document.getElementById('contr_v').innerText = Math.round(R.contr).toLocaleString('ru-RU')+' ₽';
+  
+  // ИСПРАВЛЕННЫЙ РАСЧЕТ ОКУПАЕМОСТИ
+  const payback = (paybackMode==='ebitda') 
+    ? (R.capex_total_all/Math.max(1,R.ebitda_year)) 
+    : (R.capex_total_all/Math.max(1,R.net_year));
+  
+  document.getElementById('payback_v').innerText = (payback>0?payback.toFixed(1):'∞');
+  document.getElementById('offhub_v').innerText = fmt(R.offhub_rev_year)+' / '+fmt(R.reloc_costs);
+
+  // Revenue table
+  const season_days = P.season_m*30;
+  const payg_rev_season = R.payg_rev_day * season_days;
+  const pass_rev_season = R.pass_rev_day * season_days;
+  const m_rev_season = R.m_rev_day * season_days;
+  const total_rev_season = payg_rev_season + pass_rev_season + m_rev_season;
+  
+  document.getElementById('rev_rows').innerHTML = `
+    <tr><td>PAYG</td><td>${fmt(payg_rev_season)}</td><td>${total_rev_season>0?(payg_rev_season/total_rev_season*100).toFixed(0):0}%</td></tr>
+    <tr><td>Day Pass</td><td>${fmt(pass_rev_season)}</td><td>${total_rev_season>0?(pass_rev_season/total_rev_season*100).toFixed(0):0}%</td></tr>
+    <tr><td>Membership</td><td>${fmt(m_rev_season)}</td><td>${total_rev_season>0?(m_rev_season/total_rev_season*100).toFixed(0):0}%</td></tr>
+    <tr><td>Off‑hub сборы</td><td>${fmt(R.offhub_rev_year)}</td><td>—</td></tr>
+    <tr><td>B2G/спонсоры</td><td>${fmt(R.b2g_rev_year)}</td><td>—</td></tr>
+  `;
+
+  // Cost table
+  document.getElementById('cost_rows').innerHTML = `
+    <tr><td>Эквайринг</td><td>${fmt(R.acq)}</td></tr>
+    <tr><td>Переменные</td><td>${fmt(R.varcost)}</td></tr>
+    <tr><td>Фикс. сезон</td><td>${fmt(R.fixed)}</td></tr>
+    <tr><td>Межсезонье</td><td>${fmt(R.off_season_costs)}</td></tr>
+    <tr><td>Релокация</td><td>${fmt(R.reloc_costs)}</td></tr>
+    <tr><td>Платежи городу</td><td>${fmt(R.city_fees)}</td></tr>
+    <tr><td>Амортизация</td><td>${fmt(R.dep_year)}</td></tr>
+    <tr><td>Проценты по долгу</td><td>${fmt(R.interest)}</td></tr>
+    <tr><td>Налоги</td><td>${fmt(R.tax_year)}</td></tr>
+    ${R.vat_year>0?`<tr><td>НДС (к уплате)</td><td>${fmt(R.vat_year)}</td></tr>`:''}
+  `;
+
+  // Monthly P&L
+  const mpl = document.querySelector('#pl_month tbody');
+  mpl.innerHTML = '';
+  for (let m=1; m<=12; m++) {
+    const in_season = m <= P.season_m;
+    const b2c_m = in_season ? R.b2c_rev_season / P.season_m : 0;
+    const b2g_m = R.b2g_rev_year / 12;
+    const offhub_m = in_season ? R.offhub_rev_year / P.season_m : 0;
+    
+    // Fixed OPEX calculation
+    let opex_m = 0;
+    if (in_season) {
+      opex_m = (R.acq + R.varcost + R.reloc_costs) / P.season_m + P.fixed_season_m;
+    } else {
+      opex_m = P.off_m;
+    }
+    opex_m += R.city_fees / 12; // Add city fees evenly distributed
+    
+    const ebitda_m = b2c_m + b2g_m + offhub_m - opex_m;
+    const interest_m = R.interest / 12;
+    const tax_m = R.tax_year / 12;
+    const dep_m = R.dep_year / 12;
+    const net_m = ebitda_m - dep_m - interest_m - tax_m;
+    
+    mpl.innerHTML += `<tr>
+      <td>${m}</td><td>${fmt(b2c_m)}</td><td>${fmt(b2g_m)}</td><td>${fmt(offhub_m)}</td>
+      <td>${fmt(opex_m)}</td><td>${fmt(ebitda_m)}</td><td>${fmt(interest_m)}</td>
+      <td>${fmt(tax_m)}</td><td>${fmt(net_m)}</td>
+    </tr>`;
+  }
+
+  // DCF
+  const fleet_cagr = n(document.getElementById('fleet_cagr').value)/100;
+  const rpd_cagr = n(document.getElementById('rpd_cagr').value)/100;
+  const price_cagr = n(document.getElementById('price_cagr').value)/100;
+  const disc_rate = n(document.getElementById('disc_rate').value)/100;
+  const horizon = n(document.getElementById('horizon').value);
+  const hub_ok_target = n(document.getElementById('hub_ok_target').value)/100;
+
+  let dcf_tbl = document.querySelector('#dcf_tbl tbody');
+  dcf_tbl.innerHTML = '';
+  let npv = 0;
+  let cashflows = [-R.capex_total_all];
+  let fleet = P.bikes;
+  let rpd = P.rpd;
+  let hub_ok = P.hub_ok;
+  let price_index = 1;
+
+  for (let y=1; y<=horizon; y++) {
+    fleet = Math.round(fleet*(1+fleet_cagr));
+    rpd *= (1+rpd_cagr);
+    price_index *= (1+price_cagr);
+    hub_ok = Math.min(hub_ok_target, hub_ok + (hub_ok_target - P.hub_ok)/horizon);
+
+    // Recalculate with new parameters
+    const Py = {...P, bikes:fleet, rpd, hub_ok};
+    const Ry = baseCalc(Py);
+    
+    // Scale revenue by price index
+    const ebitda_scaled = Ry.ebitda_year * price_index;
+    const tax_scaled = Ry.tax_year * price_index;
+    const interest_scaled = Ry.interest * price_index;
+    const net_scaled = Ry.net_year * price_index;
+    
+    // Growth CAPEX
+    const new_bikes = y===1 ? fleet : fleet - Math.round(P.bikes*Math.pow(1+fleet_cagr,y-1));
+    const new_hubs = Math.ceil(new_bikes / P.bikes_per_hub);
+    const capex_growth = new_bikes*P.bike_capex + new_hubs*P.hub_capex;
+    
+    // FCF = Чистая прибыль + Амортизация - CAPEX роста
+    const fcf = net_scaled + Ry.dep_year - capex_growth;
+    const pv = fcf / Math.pow(1+disc_rate, y);
+    npv += pv;
+    cashflows.push(fcf);
+
+    dcf_tbl.innerHTML += `<tr>
+      <td>${y}</td><td>${fleet}</td><td>${(fleet*rpd*P.season_m*30/1e6).toFixed(2)}</td>
+      <td>${mln(ebitda_scaled)}</td><td>${mln(interest_scaled+tax_scaled)}</td>
+      <td>${mln(capex_growth)}</td><td>${mln(fcf)}</td><td>${mln(pv)}</td>
+    </tr>`;
+  }
+
+  document.getElementById('npv_v').innerText = mln(npv);
+  const irr_val = IRR(cashflows);
+  document.getElementById('irr_v').innerText = (irr_val*100).toFixed(1)+'%';
+}
+
+// Initialize
+window.onload = function(){ calc(); };
+</script>
+</body>
+</html>
